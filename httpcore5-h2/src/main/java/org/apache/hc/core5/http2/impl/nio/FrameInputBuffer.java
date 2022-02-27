@@ -86,7 +86,15 @@ public final class FrameInputBuffer {
         } else {
             buffer.clear();
         }
-        buffer.put(src);
+        final int remaining = buffer.remaining();
+        if (remaining >= src.remaining()) {
+            buffer.put(src);
+        } else {
+            final int limit = src.limit();
+            src.limit(remaining);
+            buffer.put(src);
+            src.limit(limit);
+        }
         buffer.flip();
     }
 

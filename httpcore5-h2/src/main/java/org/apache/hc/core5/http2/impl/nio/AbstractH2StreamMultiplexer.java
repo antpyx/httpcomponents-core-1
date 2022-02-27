@@ -434,11 +434,14 @@ abstract class AbstractH2StreamMultiplexer implements Identifiable, HttpConnecti
         if (connState == ConnectionHandshake.SHUTDOWN) {
             ioSession.clearEvent(SelectionKey.OP_READ);
         } else {
-            if (src != null) {
-                inputBuffer.put(src);
-            }
-            RawFrame frame;
-            while ((frame = inputBuffer.read(ioSession)) != null) {
+            for (;;) {
+                if (src != null && src.hasRemaining()) {
+                    inputBuffer.put(src);
+                }
+                final RawFrame frame = inputBuffer.read(ioSession);
+                if (frame == null) {
+                    break;
+                }
                 if (streamListener != null) {
                     streamListener.onFrameInput(this, frame.getStreamId(), frame);
                 }
